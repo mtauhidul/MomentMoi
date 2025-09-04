@@ -1,0 +1,459 @@
+generator client {
+  provider = "prisma-client-js"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+  schemas  = ["public"]
+}
+
+model profiles {
+  id                      String             @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  email                   String             @unique
+  full_name               String?
+  user_type               UserType
+  avatar_url              String?
+  location_preference     String?
+  onboarding_completed    Boolean            @default(false)
+  created_at              DateTime           @default(now()) @db.Timestamptz(6)
+  updated_at              DateTime           @default(now()) @db.Timestamptz(6)
+  couple_profiles_partner couple_profiles[]  @relation("couple_profiles_partner")
+  couple_profiles         couple_profiles[]
+  events                  events[]
+  vendor_favorites        vendor_favorites[]
+  vendor_profiles         vendor_profiles[]
+
+  @@schema("public")
+}
+
+model couple_profiles {
+  id            String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  user_id       String    @db.Uuid
+  partner_id    String?   @db.Uuid
+  partner_name  String?
+  partner_email String?
+  created_at    DateTime  @default(now()) @db.Timestamptz(6)
+  updated_at    DateTime  @default(now()) @db.Timestamptz(6)
+  partner       profiles? @relation("couple_profiles_partner", fields: [partner_id], references: [id])
+  user          profiles  @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+  @@schema("public")
+}
+
+model vendor_profiles {
+  id                    String                @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  user_id               String                @db.Uuid
+  business_name         String
+  slug                  String?               @unique
+  description           String?
+  logo_url              String?
+  verified              Boolean               @default(false)
+  created_at            DateTime              @default(now()) @db.Timestamptz(6)
+  updated_at            DateTime              @default(now()) @db.Timestamptz(6)
+  business_category     VendorCategory
+  event_types           EventType[]           @default([])
+  external_calendar_url String?
+  privacy_settings      Json?
+  profile_views         Int                   @default(0)
+  vendor_analytics      vendor_analytics[]
+  vendor_availability   vendor_availability[]
+  vendor_bookings       vendor_bookings[]
+  vendor_contacts       vendor_contacts[]
+  vendor_favorites      vendor_favorites[]
+  vendor_gallery        vendor_gallery[]
+  vendor_inquiries      vendor_inquiries[]
+  vendor_locations      vendor_locations[]
+  user                  profiles              @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  vendor_services       vendor_services[]
+
+  @@schema("public")
+}
+
+model vendor_contacts {
+  id            String          @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  vendor_id     String          @db.Uuid
+  contact_type  ContactType
+  contact_value String
+  is_primary    Boolean         @default(false)
+  created_at    DateTime        @default(now()) @db.Timestamptz(6)
+  updated_at    DateTime        @default(now()) @db.Timestamptz(6)
+  vendor        vendor_profiles @relation(fields: [vendor_id], references: [id], onDelete: Cascade)
+
+  @@schema("public")
+}
+
+model vendor_locations {
+  id         String          @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  vendor_id  String          @db.Uuid
+  location   CyprusLocation
+  created_at DateTime        @default(now()) @db.Timestamptz(6)
+  vendor     vendor_profiles @relation(fields: [vendor_id], references: [id], onDelete: Cascade)
+
+  @@schema("public")
+}
+
+model events {
+  id              String            @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  planner_id      String            @db.Uuid
+  event_type      EventType
+  event_date      DateTime?         @db.Date
+  location        String?
+  guest_count     String?
+  event_style     String?
+  budget_range    String?
+  planning_stage  String?
+  ceremony_venue  String?
+  reception_venue String?
+  ceremony_time   String?
+  reception_time  String?
+  created_at      DateTime          @default(now()) @db.Timestamptz(6)
+  updated_at      DateTime          @default(now()) @db.Timestamptz(6)
+  budget_items    budget_items[]
+  checklist_items checklist_items[]
+  planner         profiles          @relation(fields: [planner_id], references: [id], onDelete: Cascade)
+  guest_groups    guest_groups[]
+  guests          guests[]
+
+  @@schema("public")
+}
+
+model service_categories {
+  id              String            @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name            String            @unique
+  icon            String?
+  description     String?
+  created_at      DateTime          @default(now()) @db.Timestamptz(6)
+  category        VendorCategory
+  event_types     EventType[]       @default([])
+  vendor_services vendor_services[]
+
+  @@schema("public")
+}
+
+model vendor_services {
+  id               String             @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  vendor_id        String             @db.Uuid
+  category_id      String             @db.Uuid
+  name             String
+  description      String?
+  pricing_model    String?
+  created_at       DateTime           @default(now()) @db.Timestamptz(6)
+  updated_at       DateTime           @default(now()) @db.Timestamptz(6)
+  event_types      EventType[]        @default([])
+  is_active        Boolean            @default(true)
+  vendor_bookings  vendor_bookings[]
+  vendor_inquiries vendor_inquiries[]
+  category         service_categories @relation(fields: [category_id], references: [id], onDelete: Cascade)
+  vendor           vendor_profiles    @relation(fields: [vendor_id], references: [id], onDelete: Cascade)
+
+  @@schema("public")
+}
+
+model vendor_inquiries {
+  id              String            @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  vendor_id       String            @db.Uuid
+  service_id      String?           @db.Uuid
+  client_name     String
+  client_email    String
+  client_phone    String?
+  event_type      EventType
+  event_date      DateTime?         @db.Date
+  guest_count     Int?
+  location        String?
+  budget_range    String?
+  message         String
+  status          InquiryStatus     @default(new)
+  priority        InquiryPriority   @default(medium)
+  source          InquirySource     @default(website)
+  created_at      DateTime          @default(now()) @db.Timestamptz(6)
+  updated_at      DateTime          @default(now()) @db.Timestamptz(6)
+  responded_at    DateTime?         @db.Timestamptz(6)
+  vendor_bookings vendor_bookings[]
+  service         vendor_services?  @relation(fields: [service_id], references: [id])
+  vendor          vendor_profiles   @relation(fields: [vendor_id], references: [id], onDelete: Cascade)
+
+  @@index([vendor_id])
+  @@index([status])
+  @@index([created_at])
+  @@schema("public")
+}
+
+model vendor_bookings {
+  id            String           @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  vendor_id     String           @db.Uuid
+  inquiry_id    String           @db.Uuid
+  service_id    String?          @db.Uuid
+  client_name   String
+  client_email  String
+  client_phone  String?
+  event_type    EventType
+  event_date    DateTime         @db.Date
+  start_time    String?
+  end_time      String?
+  guest_count   Int?
+  location      String?
+  budget_amount Decimal?         @db.Decimal(10, 2)
+  notes         String?
+  status        BookingStatus    @default(confirmed)
+  created_at    DateTime         @default(now()) @db.Timestamptz(6)
+  updated_at    DateTime         @default(now()) @db.Timestamptz(6)
+  inquiry       vendor_inquiries @relation(fields: [inquiry_id], references: [id], onDelete: Cascade)
+  service       vendor_services? @relation(fields: [service_id], references: [id])
+  vendor        vendor_profiles  @relation(fields: [vendor_id], references: [id], onDelete: Cascade)
+
+  @@index([vendor_id])
+  @@index([event_date])
+  @@index([status])
+  @@schema("public")
+}
+
+model guests {
+  id                            String                 @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  event_id                      String                 @db.Uuid
+  name                          String
+  email                         String?
+  phone                         String?
+  rsvp_status                   RSVPStatus             @default(pending)
+  dietary_restrictions          String?
+  created_at                    DateTime               @default(now()) @db.Timestamptz(6)
+  updated_at                    DateTime               @default(now()) @db.Timestamptz(6)
+  rsvp_response_date            DateTime?              @db.Timestamptz(6)
+  plus_one_name                 String?
+  plus_one_dietary_restrictions String?
+  group_category                String?
+  notes                         String?
+  invitation_sent               Boolean                @default(false)
+  invitation_sent_date          DateTime?              @db.Timestamptz(6)
+  guest_communications          guest_communications[]
+  event                         events                 @relation(fields: [event_id], references: [id], onDelete: Cascade)
+
+  @@schema("public")
+}
+
+model guest_groups {
+  id         String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  event_id   String   @db.Uuid
+  name       String
+  color      String?
+  sort_order Int      @default(0)
+  created_at DateTime @default(now()) @db.Timestamptz(6)
+  updated_at DateTime @default(now()) @db.Timestamptz(6)
+  event      events   @relation(fields: [event_id], references: [id], onDelete: Cascade)
+
+  @@schema("public")
+}
+
+model guest_communications {
+  id         String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  guest_id   String   @db.Uuid
+  type       String
+  subject    String?
+  content    String?
+  sent_at    DateTime @default(now()) @db.Timestamptz(6)
+  status     String   @default("sent")
+  created_at DateTime @default(now()) @db.Timestamptz(6)
+  guest      guests   @relation(fields: [guest_id], references: [id], onDelete: Cascade)
+
+  @@schema("public")
+}
+
+model checklist_items {
+  id          String             @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  event_id    String             @db.Uuid
+  title       String
+  description String?
+  due_date    DateTime?          @db.Date
+  completed   Boolean            @default(false)
+  created_at  DateTime           @default(now()) @db.Timestamptz(6)
+  updated_at  DateTime           @default(now()) @db.Timestamptz(6)
+  category    ChecklistCategory?
+  event       events             @relation(fields: [event_id], references: [id], onDelete: Cascade)
+
+  @@schema("public")
+}
+
+model budget_items {
+  id             String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  event_id       String   @db.Uuid
+  category       String
+  name           String
+  estimated_cost Float?
+  actual_cost    Float?
+  created_at     DateTime @default(now()) @db.Timestamptz(6)
+  updated_at     DateTime @default(now()) @db.Timestamptz(6)
+  event          events   @relation(fields: [event_id], references: [id], onDelete: Cascade)
+
+  @@schema("public")
+}
+
+model vendor_availability {
+  id           String          @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  vendor_id    String          @db.Uuid
+  date         DateTime        @db.Date
+  is_available Boolean         @default(true)
+  created_at   DateTime        @default(now()) @db.Timestamptz(6)
+  vendor       vendor_profiles @relation(fields: [vendor_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@unique([vendor_id, date])
+  @@index([date])
+  @@index([vendor_id])
+  @@schema("public")
+}
+
+model vendor_analytics {
+  id            String          @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  vendor_id     String          @db.Uuid
+  date          DateTime        @db.Date
+  profile_views Int             @default(0)
+  inquiry_views Int             @default(0)
+  created_at    DateTime        @default(now()) @db.Timestamptz(6)
+  updated_at    DateTime        @default(now()) @db.Timestamptz(6)
+  vendor        vendor_profiles @relation(fields: [vendor_id], references: [id], onDelete: Cascade)
+
+  @@unique([vendor_id, date])
+  @@index([vendor_id])
+  @@index([date])
+  @@schema("public")
+}
+
+model vendor_favorites {
+  id         String          @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  user_id    String          @db.Uuid
+  vendor_id  String          @db.Uuid
+  created_at DateTime        @default(now()) @db.Timestamptz(6)
+  user       profiles        @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  vendor     vendor_profiles @relation(fields: [vendor_id], references: [id], onDelete: Cascade)
+
+  @@unique([user_id, vendor_id])
+  @@schema("public")
+}
+
+model vendor_gallery {
+  id            String          @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  vendor_id     String          @db.Uuid
+  image_url     String
+  caption       String?
+  display_order Int             @default(0)
+  is_featured   Boolean         @default(false)
+  created_at    DateTime        @default(now()) @db.Timestamptz(6)
+  updated_at    DateTime        @default(now()) @db.Timestamptz(6)
+  vendor        vendor_profiles @relation(fields: [vendor_id], references: [id], onDelete: Cascade)
+
+  @@index([vendor_id])
+  @@index([display_order])
+  @@schema("public")
+}
+
+enum UserType {
+  planner
+  vendor
+  viewer
+
+  @@schema("public")
+}
+
+enum EventType {
+  wedding
+  christening
+  party
+  kids_party
+
+  @@schema("public")
+}
+
+enum VendorCategory {
+  cake
+  dress
+  florist
+  jeweller
+  music
+  photographer
+  transportation
+  venue
+  videographer
+
+  @@schema("public")
+}
+
+enum ContactType {
+  email
+  phone
+
+  @@schema("public")
+}
+
+enum CyprusLocation {
+  nicosia
+  limassol
+  larnaca
+  paphos
+  platres
+  paralimni_ayia_napa
+  whole_cyprus
+
+  @@schema("public")
+}
+
+enum RSVPStatus {
+  pending
+  confirmed
+  declined
+  maybe
+
+  @@schema("public")
+}
+
+enum InquiryStatus {
+  new
+  responded
+  booked
+  declined
+  archived
+
+  @@schema("public")
+}
+
+enum InquiryPriority {
+  low
+  medium
+  high
+  urgent
+
+  @@schema("public")
+}
+
+enum InquirySource {
+  website
+  phone
+  email
+  social_media
+  referral
+
+  @@schema("public")
+}
+
+enum BookingStatus {
+  confirmed
+  completed
+  cancelled
+  rescheduled
+
+  @@schema("public")
+}
+
+enum ChecklistCategory {
+  planning
+  ceremony
+  reception
+  attire
+  vendors
+  stationery
+  photography
+  transportation
+  accommodations
+  miscellaneous
+
+  @@schema("public")
+}

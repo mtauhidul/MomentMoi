@@ -1,0 +1,28 @@
+{
+  "name": "MomentMoi - Event Planning Platform",
+  "short_name": "MomentMoi",
+  "description": "Sophisticated event planning platform for couples, vendors, and event planners",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#507c7b",
+  "orientation": "portrait-primary",
+  "scope": "/",
+  "icons": [
+    {
+      "src": "/icon-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icon-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": ["business", "productivity", "lifestyle"],
+  "lang": "en",
+  "dir": "ltr"
+}

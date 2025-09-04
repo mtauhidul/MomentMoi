@@ -1,0 +1,45 @@
+-- SUPABASE STORAGE BUCKET SETUP INSTRUCTIONS
+--
+-- IMPORTANT: You cannot run this SQL directly in Supabase.
+-- Instead, follow these steps in your Supabase Dashboard:
+--
+-- 1. Go to your Supabase Dashboard
+-- 2. Navigate to Storage
+-- 3. Create a new bucket called 'vendor-gallery'
+-- 4. Make the bucket public
+-- 5. Set up the following policies in the bucket settings:
+--
+-- POLICY: "Users can upload images for their vendors"
+-- - Operation: INSERT
+-- - Conditions:
+--   - auth.role() = 'authenticated'
+--   - bucket_id = 'vendor-gallery'
+--   - (storage.foldername(name))[1] = 'vendors'
+--   - (storage.foldername(name))[2] = auth.uid()::text
+--
+-- POLICY: "Users can update images for their vendors"
+-- - Operation: UPDATE
+-- - Conditions:
+--   - auth.role() = 'authenticated'
+--   - bucket_id = 'vendor-gallery'
+--   - (storage.foldername(name))[1] = 'vendors'
+--   - (storage.foldername(name))[2] = auth.uid()::text
+--
+-- POLICY: "Users can delete images for their vendors"
+-- - Operation: DELETE
+-- - Conditions:
+--   - auth.role() = 'authenticated'
+--   - bucket_id = 'vendor-gallery'
+--   - (storage.foldername(name))[1] = 'vendors'
+--   - (storage.foldername(name))[2] = auth.uid()::text
+--
+-- POLICY: "Public can view vendor gallery images"
+-- - Operation: SELECT
+-- - Conditions:
+--   - bucket_id = 'vendor-gallery'
+--
+-- ALTERNATIVE APPROACH:
+-- If you prefer to use Supabase's built-in storage security,
+-- you can simply create the bucket as public and rely on
+-- application-level security through your useImageUpload hook
+-- and vendor_gallery table RLS policies.
