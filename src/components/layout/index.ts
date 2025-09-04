@@ -3,3 +3,4 @@ export { DashboardLayout } from "./DashboardLayout";
 export { ClientSidebar } from "./ClientSidebar";
 export { ClientDashboardLayout } from "./ClientDashboardLayout";
 export { Header } from "./Header";
+export { Footer } from "./Footer";

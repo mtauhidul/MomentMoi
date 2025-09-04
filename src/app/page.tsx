@@ -1,7 +1,7 @@
 "use client";
 
 import { FeaturedVendorCard } from "@/components/features/vendors/FeaturedVendorCard";
-import { Header } from "@/components/layout/Header";
+import { Header, Footer } from "@/components/layout";
 import { Button } from "@/components/ui/Button";
 import { Card, CardContent } from "@/components/ui/Card";
 import { Skeleton } from "@/components/ui/Skeleton";
@@ -179,6 +179,8 @@ export default function HomePage() {
           </div>
         </div>
       </section>
+
+      <Footer />
     </div>
   );
 }
