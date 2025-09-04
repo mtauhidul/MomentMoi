@@ -4,10 +4,13 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
+    "dev:fresh": "rm -rf .next && next dev",
     "build": "prisma generate && next build",
     "start": "next start",
     "db:seed": "tsx prisma/seed.ts",
-    "postinstall": "prisma generate"
+    "postinstall": "prisma generate",
+    "clear-cache": "./clear-cache.sh",
+    "fresh-start": "rm -rf .next && pnpm run dev"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.2.1",
@@ -19,7 +22,7 @@
     "@tanstack/react-query-devtools": "^5.85.9",
     "clsx": "^2.1.1",
     "date-fns": "^4.1.0",
-    "lucide-react": "^0.539.0",
+    "lucide-react": "0.542.0",
     "next": "15.4.6",
     "prisma": "^6.14.0",
     "react": "19.1.0",

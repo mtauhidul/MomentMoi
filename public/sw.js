@@ -1,8 +1,8 @@
 // Service Worker for MomentMoi - Refresh Optimization & Offline Support
 
-const CACHE_NAME = "momentmoi-v1";
-const STATIC_CACHE = "momentmoi-static-v1";
-const API_CACHE = "momentmoi-api-v1";
+const CACHE_NAME = "momentmoi-v2"; // Updated cache version
+const STATIC_CACHE = "momentmoi-static-v2";
+const API_CACHE = "momentmoi-api-v2";
 
 // Assets to cache immediately
 const STATIC_ASSETS = [

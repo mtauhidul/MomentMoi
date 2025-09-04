@@ -5,9 +5,9 @@ import { Header } from "@/components/layout/Header";
 import { Button } from "@/components/ui/Button";
 import { Card, CardContent } from "@/components/ui/Card";
 import { Skeleton } from "@/components/ui/Skeleton";
+import { CameraIcon } from "@/components/ui/HydratedIcon";
 import { useFeaturedVendors } from "@/hooks/useFeaturedVendors";
 import {
-  Camera,
   ChevronRight,
   MapPin,
   Music,
@@ -73,7 +73,7 @@ export default function HomePage() {
                       href="/vendors/photographers"
                       className="flex items-center space-x-3 p-4 rounded-lg hover:bg-primary-50 transition-colors group"
                     >
-                      <Camera className="w-6 h-6 text-primary-500" />
+                      <CameraIcon className="w-6 h-6 text-primary-500" />
                       <span className="text-body font-medium text-text-primary">
                         Photographers
                       </span>

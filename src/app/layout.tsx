@@ -6,6 +6,10 @@ import { AuthProvider } from "@/contexts/AuthContext";
 import { QueryProvider } from "@/components/providers/QueryProvider";
 import { ServiceWorkerProvider } from "@/components/providers/ServiceWorkerProvider";
 import { Toaster } from "sonner";
+import { CacheManager } from "@/lib/cache-manager";
+
+// Cache busting key for development
+const APP_VERSION = process.env.NODE_ENV === 'development' ? Date.now() : '1.0.0';
 
 // Local font - Ivy Presto Display
 const ivyPrestoDisplay = localFont({
@@ -46,8 +50,21 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
+      <head>
+        {/* Cache busting meta tag */}
+        <meta name="cache-version" content={APP_VERSION.toString()} />
+        {process.env.NODE_ENV === 'development' && (
+          <>
+            <meta httpEquiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+            <meta httpEquiv="Pragma" content="no-cache" />
+            <meta httpEquiv="Expires" content="0" />
+          </>
+        )}
+      </head>
       <body
         className={`${ivyPrestoDisplay.variable} ${lato.variable} antialiased`}
+        suppressHydrationWarning={true}
+        data-version={APP_VERSION}
       >
         <QueryProvider>
           <ServiceWorkerProvider>
@@ -55,6 +72,7 @@ export default function RootLayout({
           </ServiceWorkerProvider>
         </QueryProvider>
         <Toaster />
+        {process.env.NODE_ENV === 'development' && <CacheManager />}
       </body>
     </html>
   );
