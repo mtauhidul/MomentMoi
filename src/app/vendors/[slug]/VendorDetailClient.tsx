@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/Button";
 import { Badge } from "@/components/ui/Badge";
 import { Icon } from "@/components/ui/Icon";
 import { Skeleton } from "@/components/ui/Skeleton";
-import { Header } from "@/components/layout/Header";
+import { Header, Footer } from "@/components/layout";
 import { createClientComponentClient } from "@/lib/supabase";
 import { useAuth } from "@/contexts/AuthContext";
 import { useVendorGallery, useImageUpload } from "@/hooks";
@@ -225,28 +225,57 @@ export default function VendorDetailClient({
     e.preventDefault();
     if (!vendor) return;
 
+    // Validate required fields
+    if (!contactForm.name.trim()) {
+      alert("Please enter your name");
+      return;
+    }
+
+    if (!contactForm.email.trim()) {
+      alert("Please enter your email");
+      return;
+    }
+
+    if (!contactForm.message.trim()) {
+      alert("Please enter a message");
+      return;
+    }
+
     try {
       setSubmitting(true);
 
-      const { error } = await supabase.from("vendor_inquiries").insert({
+      console.log("🔄 Submitting vendor inquiry:", {
         vendor_id: vendor.id,
         client_name: contactForm.name,
         client_email: contactForm.email,
-        client_phone: contactForm.phone || null,
-        event_type: contactForm.eventType as any,
+        event_type: contactForm.eventType || "general",
+      });
+
+      const { data, error } = await supabase.from("vendor_inquiries").insert({
+        vendor_id: vendor.id,
+        client_name: contactForm.name.trim(),
+        client_email: contactForm.email.trim(),
+        client_phone: contactForm.phone.trim() || null,
+        event_type: contactForm.eventType || "general",
         event_date: contactForm.eventDate || null,
         guest_count: contactForm.guestCount
           ? parseInt(contactForm.guestCount)
           : null,
         location: null,
         budget_range: null,
-        message: contactForm.message,
+        message: contactForm.message.trim(),
         status: "new",
         priority: "medium",
         source: "website",
-      });
+        service_id: null, // Optional service - could be added later
+      }).select();
 
-      if (error) throw error;
+      if (error) {
+        console.error("❌ Error sending inquiry:", error);
+        throw error;
+      }
+
+      console.log("✅ Inquiry sent successfully:", data);
 
       // Reset form
       setContactForm({
@@ -259,10 +288,22 @@ export default function VendorDetailClient({
         message: "",
       });
 
-      alert("Your inquiry has been sent successfully!");
-    } catch (err) {
-      console.error("Error sending inquiry:", err);
-      alert("Failed to send inquiry. Please try again.");
+      alert("Your inquiry has been sent successfully! The vendor will contact you soon.");
+    } catch (err: any) {
+      console.error("💥 Error sending inquiry:", err);
+      
+      // Show user-friendly error message
+      let errorMessage = "Failed to send inquiry. Please try again.";
+      
+      if (err.message?.includes("foreign key constraint")) {
+        errorMessage = "There was an issue with the vendor information. Please try again later.";
+      } else if (err.message?.includes("not-null constraint")) {
+        errorMessage = "Please fill in all required fields.";
+      } else if (err.message) {
+        errorMessage = `Error: ${err.message}`;
+      }
+      
+      alert(errorMessage);
     } finally {
       setSubmitting(false);
     }
@@ -835,6 +876,8 @@ export default function VendorDetailClient({
           </div>
         </div>
       </div>
+      
+      <Footer />
     </div>
   );
 }

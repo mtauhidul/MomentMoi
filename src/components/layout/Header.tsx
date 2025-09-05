@@ -3,6 +3,9 @@
 import { Button } from "@/components/ui/Button";
 import { useAuth } from "@/contexts/AuthContext";
 import { CameraIcon } from "@/components/ui/HydratedIcon";
+import { RoutePreloader, PUBLIC_ROUTES, COMMON_ROUTES, VENDOR_ROUTES, PLANNER_ROUTES } from "@/components/ui/RoutePreloader";
+import { NavigationProgress } from "@/components/ui/NavigationProgress";
+import { useInstantNavigation } from "@/hooks/useInstantNavigation";
 import {
   Baby,
   ChevronDown,
@@ -22,8 +25,8 @@ import {
   Menu,
   X,
 } from "lucide-react";
-import Link from "next/link";
-import { useEffect, useState, useRef } from "react";
+import { useRouter } from "next/navigation";
+import { useEffect, useState, useRef, useCallback, memo, useMemo } from "react";
 
 export function Header() {
   const [isHeaderVisible, setIsHeaderVisible] = useState(true);
@@ -31,18 +34,48 @@ export function Header() {
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const { user, signOut, loading } = useAuth();
+  const router = useRouter();
+  const { navigateInstantly, isNavigating, targetPath } = useInstantNavigation();
   
   const mobileMenuRef = useRef<HTMLDivElement>(null);
   const mobileMenuButtonRef = useRef<HTMLButtonElement>(null);
 
-  const handleSignOut = async () => {
+  // Memoize routes to prevent infinite re-renders
+  const preloadRoutes = useMemo(() => {
+    const routes = [...PUBLIC_ROUTES];
+    
+    if (user) {
+      routes.push(...COMMON_ROUTES);
+      
+      const userType = user.user_metadata?.user_type;
+      if (userType === "vendor") {
+        routes.push(...VENDOR_ROUTES);
+      } else if (userType === "planner") {
+        routes.push(...PLANNER_ROUTES);
+      }
+    }
+    
+    return routes;
+  }, [user]);
+
+  const handleSignOut = useCallback(async () => {
     await signOut();
     setIsUserMenuOpen(false);
-  };
+  }, [signOut]);
 
-  const closeMobileMenu = () => {
+  const closeMobileMenu = useCallback(() => {
     setIsMobileMenuOpen(false);
-  };
+  }, []);
+
+  const handleNavigation = useCallback((path: string) => {
+    closeMobileMenu();
+    navigateInstantly(path);
+  }, [navigateInstantly, closeMobileMenu]);
+
+  const handleLinkClick = useCallback((e: React.MouseEvent, path: string) => {
+    e.preventDefault();
+    handleNavigation(path);
+  }, [handleNavigation]);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -86,52 +119,70 @@ export function Header() {
       }
     };
 
-    window.addEventListener("scroll", handleScroll, { passive: true });
+    // Throttle scroll events for better performance
+    let ticking = false;
+    const throttledHandleScroll = () => {
+      if (!ticking) {
+        requestAnimationFrame(() => {
+          handleScroll();
+          ticking = false;
+        });
+        ticking = true;
+      }
+    };
+
+    window.addEventListener("scroll", throttledHandleScroll, { passive: true });
     window.addEventListener("mousedown", handleClickOutside); // Use mousedown instead of click
     window.addEventListener("keydown", handleKeyDown);
 
     return () => {
-      window.removeEventListener("scroll", handleScroll);
+      window.removeEventListener("scroll", throttledHandleScroll);
       window.removeEventListener("mousedown", handleClickOutside);
       window.removeEventListener("keydown", handleKeyDown);
     };
   }, [lastScrollY]);
 
   return (
-    <header
-      key="responsive-header-v2" // Force re-render with cache busting
-      className={`sticky top-0 z-50 bg-white border-b border-border transition-transform duration-300 ease-in-out ${
-        !isHeaderVisible ? "-translate-y-full" : "translate-y-0"
-      }`}
-    >
+    <>
+      {/* Route Preloader for better navigation performance */}
+      <RoutePreloader routes={preloadRoutes} priority="low" />
+      
+      {/* Navigation Progress Indicator */}
+      <NavigationProgress />
+      
+      <header
+        className={`sticky top-0 z-50 bg-white border-b border-border transition-transform duration-300 ease-in-out ${
+          !isHeaderVisible ? "-translate-y-full" : "translate-y-0"
+        }`}
+      >
       <div className="max-w-8xl mx-auto">
         {/* First Row - Main Header */}
         <div className="h-16 px-4 lg:px-8">
           <div className="flex items-center justify-between h-full">
             {/* Left Side - Event Types (Hidden on mobile) */}
-            <div className="hidden lg:flex items-center space-x-6">
-              <Link
-                href="/weddings"
+            <nav className="hidden lg:flex items-center space-x-6">
+              <button
+                onClick={() => handleNavigation("/weddings")}
                 className="flex items-center space-x-2 text-text-secondary hover:text-primary-500 transition-colors"
               >
                 <Heart className="w-4 h-4" />
                 <span className="text-sm font-medium">Weddings</span>
-              </Link>
-              <Link
-                href="/christenings"
+              </button>
+              <button
+                onClick={() => handleNavigation("/christenings")}
                 className="flex items-center space-x-2 text-text-secondary hover:text-primary-500 transition-colors"
               >
                 <Baby className="w-4 h-4" />
                 <span className="text-sm font-medium">Christenings</span>
-              </Link>
-              <Link
-                href="/parties"
+              </button>
+              <button
+                onClick={() => handleNavigation("/parties")}
                 className="flex items-center space-x-2 text-text-secondary hover:text-primary-500 transition-colors"
               >
                 <PartyPopper className="w-4 h-4" />
                 <span className="text-sm font-medium">Parties</span>
-              </Link>
-            </div>
+              </button>
+            </nav>
 
             {/* Mobile Menu Button */}
             <button
@@ -157,10 +208,13 @@ export function Header() {
 
             {/* Center - Logo */}
             <div className="flex-1 flex justify-center lg:flex-none">
-              <Link href="/" className="text-xl lg:text-2xl text-display font-light">
+              <button
+                onClick={() => handleNavigation("/")}
+                className="text-xl lg:text-2xl text-display font-light"
+              >
                 <span className="text-black">Moment</span>
                 <span className="text-primary-500">Moi</span>
-              </Link>
+              </button>
             </div>
 
             {/* Right Side - Auth/User Buttons (Hidden on mobile except essentials) */}
@@ -184,23 +238,27 @@ export function Header() {
                       <div className="absolute right-0 mt-2 w-56 bg-white border border-border rounded-md shadow-lg z-50">
                         <div className="py-1">
                           {/* Navigation Links */}
-                          <Link
-                            href="/dashboard"
+                          <button
+                            onClick={() => {
+                              handleNavigation("/dashboard");
+                              setIsUserMenuOpen(false);
+                            }}
                             className="flex items-center space-x-2 w-full px-4 py-2 text-sm text-text-primary hover:bg-gray-50 transition-colors"
-                            onClick={() => setIsUserMenuOpen(false)}
                           >
                             <LayoutDashboard className="w-4 h-4" />
                             <span>Dashboard</span>
-                          </Link>
+                          </button>
 
-                          <Link
-                            href="/dashboard/profile"
+                          <button
+                            onClick={() => {
+                              handleNavigation("/dashboard/profile");
+                              setIsUserMenuOpen(false);
+                            }}
                             className="flex items-center space-x-2 w-full px-4 py-2 text-sm text-text-primary hover:bg-gray-50 transition-colors"
-                            onClick={() => setIsUserMenuOpen(false)}
                           >
                             <User className="w-4 h-4" />
                             <span>Profile</span>
-                          </Link>
+                          </button>
 
                           {/* Separator */}
                           <div className="border-t border-border my-1"></div>
@@ -217,36 +275,36 @@ export function Header() {
                       </div>
                     )}
                   </div>
-                  <Button variant="outline" size="sm" asChild>
-                    <Link
-                      href="/favorites"
-                      className="flex items-center space-x-2"
-                    >
-                      <HeartIcon className="w-4 h-4" />
-                      <span>Favorites</span>
-                    </Link>
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    onClick={() => handleNavigation("/favorites")}
+                    className="flex items-center space-x-2"
+                  >
+                    <HeartIcon className="w-4 h-4" />
+                    <span>Favorites</span>
                   </Button>
                 </>
               ) : (
                 <>
                   {/* Login Button */}
-                  <Button variant="outline" size="sm" asChild>
-                    <Link
-                      href="/auth/login"
-                      className="flex items-center space-x-2"
-                    >
-                      <LogIn className="w-4 h-4" />
-                      <span>Log in</span>
-                    </Link>
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    onClick={() => handleNavigation("/auth/login")}
+                    className="flex items-center space-x-2"
+                  >
+                    <LogIn className="w-4 h-4" />
+                    <span>Log in</span>
                   </Button>
-                  <Button variant="outline" size="sm" asChild>
-                    <Link
-                      href="/favorites"
-                      className="flex items-center space-x-2"
-                    >
-                      <HeartIcon className="w-4 h-4" />
-                      <span>Favorites</span>
-                    </Link>
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    onClick={() => handleNavigation("/favorites")}
+                    className="flex items-center space-x-2"
+                  >
+                    <HeartIcon className="w-4 h-4" />
+                    <span>Favorites</span>
                   </Button>
                 </>
               )}
@@ -269,30 +327,36 @@ export function Header() {
                         <div className="px-4 py-2 text-sm text-text-secondary border-b">
                           {user.email}
                         </div>
-                        <Link
-                          href="/dashboard"
+                        <button
+                          onClick={() => {
+                            handleNavigation("/dashboard");
+                            setIsUserMenuOpen(false);
+                          }}
                           className="flex items-center space-x-2 w-full px-4 py-2 text-sm text-text-primary hover:bg-gray-50 transition-colors"
-                          onClick={() => setIsUserMenuOpen(false)}
                         >
                           <LayoutDashboard className="w-4 h-4" />
                           <span>Dashboard</span>
-                        </Link>
-                        <Link
-                          href="/dashboard/profile"
+                        </button>
+                        <button
+                          onClick={() => {
+                            handleNavigation("/dashboard/profile");
+                            setIsUserMenuOpen(false);
+                          }}
                           className="flex items-center space-x-2 w-full px-4 py-2 text-sm text-text-primary hover:bg-gray-50 transition-colors"
-                          onClick={() => setIsUserMenuOpen(false)}
                         >
                           <User className="w-4 h-4" />
                           <span>Profile</span>
-                        </Link>
-                        <Link
-                          href="/favorites"
+                        </button>
+                        <button
+                          onClick={() => {
+                            handleNavigation("/favorites");
+                            setIsUserMenuOpen(false);
+                          }}
                           className="flex items-center space-x-2 w-full px-4 py-2 text-sm text-text-primary hover:bg-gray-50 transition-colors"
-                          onClick={() => setIsUserMenuOpen(false)}
                         >
                           <HeartIcon className="w-4 h-4" />
                           <span>Favorites</span>
-                        </Link>
+                        </button>
                         <div className="border-t border-border my-1"></div>
                         <button
                           onClick={handleSignOut}
@@ -306,11 +370,14 @@ export function Header() {
                   )}
                 </div>
               ) : (
-                <Button variant="outline" size="sm" asChild>
-                  <Link href="/auth/login" className="flex items-center space-x-1">
-                    <LogIn className="w-4 h-4" />
-                    <span className="hidden sm:inline">Log in</span>
-                  </Link>
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  onClick={() => handleNavigation("/auth/login")}
+                  className="flex items-center space-x-1"
+                >
+                  <LogIn className="w-4 h-4" />
+                  <span className="hidden sm:inline">Log in</span>
                 </Button>
               )}
             </div>
@@ -342,30 +409,27 @@ export function Header() {
                   <div className="space-y-3">
                     <h3 className="text-sm font-semibold text-text-primary">Event Types</h3>
                     <div className="space-y-2">
-                      <Link
-                        href="/weddings"
-                        className="flex items-center space-x-2 text-text-secondary hover:text-primary-500 transition-colors py-1"
-                        onClick={closeMobileMenu}
+                      <button
+                        onClick={() => handleNavigation("/weddings")}
+                        className="flex items-center space-x-2 text-text-secondary hover:text-primary-500 transition-colors py-1 w-full text-left"
                       >
                         <Heart className="w-4 h-4" />
                         <span className="text-sm font-medium">Weddings</span>
-                      </Link>
-                      <Link
-                        href="/christenings"
-                        className="flex items-center space-x-2 text-text-secondary hover:text-primary-500 transition-colors py-1"
-                        onClick={closeMobileMenu}
+                      </button>
+                      <button
+                        onClick={() => handleNavigation("/christenings")}
+                        className="flex items-center space-x-2 text-text-secondary hover:text-primary-500 transition-colors py-1 w-full text-left"
                       >
                         <Baby className="w-4 h-4" />
                         <span className="text-sm font-medium">Christenings</span>
-                      </Link>
-                      <Link
-                        href="/parties"
-                        className="flex items-center space-x-2 text-text-secondary hover:text-primary-500 transition-colors py-1"
-                        onClick={closeMobileMenu}
+                      </button>
+                      <button
+                        onClick={() => handleNavigation("/parties")}
+                        className="flex items-center space-x-2 text-text-secondary hover:text-primary-500 transition-colors py-1 w-full text-left"
                       >
                         <PartyPopper className="w-4 h-4" />
                         <span className="text-sm font-medium">Parties</span>
-                      </Link>
+                      </button>
                     </div>
                   </div>
 
@@ -373,76 +437,71 @@ export function Header() {
                   <div className="space-y-3 border-t border-border pt-4">
                     <h3 className="text-sm font-semibold text-text-primary">Vendor Categories</h3>
                     <div className="grid grid-cols-2 gap-2">
-                      <Link
-                        href="/vendors/venues"
-                        className="flex items-center space-x-2 text-text-secondary hover:text-primary-500 transition-colors py-1"
-                        onClick={closeMobileMenu}
+                      <button
+                        onClick={() => handleNavigation("/vendors/venues")}
+                        className="flex items-center space-x-2 text-text-secondary hover:text-primary-500 transition-colors py-1 w-full text-left"
                       >
                         <VenueIcon className="w-4 h-4" />
                         <span className="text-xs font-medium">Venues</span>
-                      </Link>
-                      <Link
-                        href="/vendors/photographers"
-                        className="flex items-center space-x-2 text-text-secondary hover:text-primary-500 transition-colors py-1"
-                        onClick={closeMobileMenu}
+                      </button>
+                      <button
+                        onClick={() => handleNavigation("/vendors/photographers")}
+                        className="flex items-center space-x-2 text-text-secondary hover:text-primary-500 transition-colors py-1 w-full text-left"
                       >
                         <CameraIcon className="w-4 h-4" />
                         <span className="text-xs font-medium">Photographers</span>
-                      </Link>
-                      <Link
-                        href="/vendors/catering"
-                        className="flex items-center space-x-2 text-text-secondary hover:text-primary-500 transition-colors py-1"
-                        onClick={closeMobileMenu}
+                      </button>
+                      <button
+                        onClick={() => handleNavigation("/vendors/catering")}
+                        className="flex items-center space-x-2 text-text-secondary hover:text-primary-500 transition-colors py-1 w-full text-left"
                       >
                         <UtensilsCrossed className="w-4 h-4" />
                         <span className="text-xs font-medium">Catering</span>
-                      </Link>
-                      <Link
-                        href="/vendors/florists"
-                        className="flex items-center space-x-2 text-text-secondary hover:text-primary-500 transition-colors py-1"
-                        onClick={closeMobileMenu}
+                      </button>
+                      <button
+                        onClick={() => handleNavigation("/vendors/florists")}
+                        className="flex items-center space-x-2 text-text-secondary hover:text-primary-500 transition-colors py-1 w-full text-left"
                       >
                         <Flower className="w-4 h-4" />
                         <span className="text-xs font-medium">Florists</span>
-                      </Link>
-                      <Link
-                        href="/vendors/music"
-                        className="flex items-center space-x-2 text-text-secondary hover:text-primary-500 transition-colors py-1"
-                        onClick={closeMobileMenu}
+                      </button>
+                      <button
+                        onClick={() => handleNavigation("/vendors/music")}
+                        className="flex items-center space-x-2 text-text-secondary hover:text-primary-500 transition-colors py-1 w-full text-left"
                       >
                         <Music className="w-4 h-4" />
                         <span className="text-xs font-medium">Music & DJ</span>
-                      </Link>
-                      <Link
-                        href="/vendors/planners"
-                        className="flex items-center space-x-2 text-text-secondary hover:text-primary-500 transition-colors py-1"
-                        onClick={closeMobileMenu}
+                      </button>
+                      <button
+                        onClick={() => handleNavigation("/vendors/planners")}
+                        className="flex items-center space-x-2 text-text-secondary hover:text-primary-500 transition-colors py-1 w-full text-left"
                       >
                         <ClipboardList className="w-4 h-4" />
                         <span className="text-xs font-medium">Planners</span>
-                      </Link>
-                      <Link
-                        href="/vendors/other"
-                        className="flex items-center space-x-2 text-text-secondary hover:text-primary-500 transition-colors py-1"
-                        onClick={closeMobileMenu}
+                      </button>
+                      <button
+                        onClick={() => handleNavigation("/vendors/other")}
+                        className="flex items-center space-x-2 text-text-secondary hover:text-primary-500 transition-colors py-1 w-full text-left"
                       >
                         <Star className="w-4 h-4" />
                         <span className="text-xs font-medium">Other</span>
-                      </Link>
+                      </button>
                     </div>
                   </div>
 
                   {/* Mobile Auth Actions */}
                   {!loading && !user && (
                     <div className="space-y-3 border-t border-border pt-4">
-                      <Link
-                        href="/favorites"
-                        className="flex items-center space-x-2 text-text-secondary hover:text-primary-500 transition-colors py-1"
-                        onClick={closeMobileMenu}
+                      <button
+                        onClick={() => {
+                          handleNavigation("/favorites");
+                          closeMobileMenu();
+                        }}
+                        className="flex items-center space-x-2 text-text-secondary hover:text-primary-500 transition-colors py-1 w-full text-left"
                       >
                         <HeartIcon className="w-4 h-4" />
                         <span className="text-sm font-medium">Favorites</span>
-                      </Link>
+                      </button>
                     </div>
                   )}
                 </div>
@@ -454,58 +513,59 @@ export function Header() {
         {/* Second Row - Vendor Categories (Desktop only) */}
         <div className="hidden lg:block h-10 bg-primary-900 px-8">
           <nav className="flex items-center justify-start space-x-8 h-full">
-            <Link
-              href="/vendors/venues"
+            <button
+              onClick={() => handleNavigation("/vendors/venues")}
               className="flex items-center space-x-2 text-white hover:text-primary-300 transition-colors"
             >
               <VenueIcon className="w-4 h-4" />
               <span className="text-xs font-medium">Venues</span>
-            </Link>
-            <Link
-              href="/vendors/photographers"
+            </button>
+            <button
+              onClick={() => handleNavigation("/vendors/photographers")}
               className="flex items-center space-x-2 text-white hover:text-primary-300 transition-colors"
             >
               <CameraIcon className="w-4 h-4" />
               <span className="text-xs font-medium">Photographers</span>
-            </Link>
-            <Link
-              href="/vendors/catering"
+            </button>
+            <button
+              onClick={() => handleNavigation("/vendors/catering")}
               className="flex items-center space-x-2 text-white hover:text-primary-300 transition-colors"
             >
               <UtensilsCrossed className="w-4 h-4" />
               <span className="text-xs font-medium">Catering</span>
-            </Link>
-            <Link
-              href="/vendors/florists"
+            </button>
+            <button
+              onClick={() => handleNavigation("/vendors/florists")}
               className="flex items-center space-x-2 text-white hover:text-primary-300 transition-colors"
             >
               <Flower className="w-4 h-4" />
               <span className="text-xs font-medium">Florists</span>
-            </Link>
-            <Link
-              href="/vendors/music"
+            </button>
+            <button
+              onClick={() => handleNavigation("/vendors/music")}
               className="flex items-center space-x-2 text-white hover:text-primary-300 transition-colors"
             >
               <Music className="w-4 h-4" />
               <span className="text-xs font-medium">Music & DJ</span>
-            </Link>
-            <Link
-              href="/vendors/planners"
+            </button>
+            <button
+              onClick={() => handleNavigation("/vendors/planners")}
               className="flex items-center space-x-2 text-white hover:text-primary-300 transition-colors"
             >
               <ClipboardList className="w-4 h-4" />
               <span className="text-xs font-medium">Planners</span>
-            </Link>
-            <Link
-              href="/vendors/other"
+            </button>
+            <button
+              onClick={() => handleNavigation("/vendors/other")}
               className="flex items-center space-x-2 text-white hover:text-primary-300 transition-colors"
             >
               <Star className="w-4 h-4" />
               <span className="text-xs font-medium">Other</span>
-            </Link>
+            </button>
           </nav>
         </div>
       </div>
     </header>
+    </>
   );
 }

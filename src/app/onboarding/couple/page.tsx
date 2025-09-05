@@ -205,26 +205,38 @@ export default function PlannerOnboardingPage() {
       }
 
       // Mark onboarding as completed
+      console.log("📝 Marking onboarding as completed...");
       const { data: profileData, error: profileError } = await supabase
         .from("profiles")
         .update({ onboarding_completed: true })
         .eq("id", user.id)
-        .select();
+        .select()
+        .single();
 
       if (profileError) {
         setError(`Failed to complete onboarding: ${profileError.message}`);
         return;
       }
 
+      console.log("✅ Onboarding completed successfully:", profileData);
+
       // TODO: Send partner invitation email if partner email provided
       if (formData.partnerEmail) {
         // Implement partner invitation logic
       }
 
-      // Add a small delay to ensure the user sees the success state
-      setTimeout(() => {
-        router.push("/dashboard");
-      }, 1000);
+      // Force refresh the auth context to update profile state
+      if (typeof window !== 'undefined') {
+        // Clear any cached auth data to ensure fresh profile fetch
+        localStorage.removeItem('momentmoi_auth_cache');
+        localStorage.removeItem('momentmoi_profile_cache');
+      }
+
+      // Add a delay to ensure the user sees the success state and database updates
+      await new Promise(resolve => setTimeout(resolve, 1000));
+
+      console.log("🔄 Redirecting to dashboard...");
+      router.push("/dashboard");
     } catch (error) {
       setError("An unexpected error occurred. Please try again.");
     } finally {

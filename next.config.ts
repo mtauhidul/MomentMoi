@@ -6,10 +6,30 @@ const nextConfig: NextConfig = {
     // Help with hydration mismatches caused by browser extensions
     optimizeCss: false,
   },
-  // Reduce hydration mismatches
+  
+  // Turbopack configuration (moved from experimental.turbo)
+  turbopack: {
+    rules: {
+      '*.svg': {
+        loaders: ['@svgr/webpack'],
+        as: '*.js',
+      },
+    },
+  },
+  
+  // Reduce hydration mismatches and improve performance
   reactStrictMode: true,
   
-  // Add headers to prevent aggressive caching in development
+  // Compiler optimizations  
+  poweredByHeader: false,
+  
+  // Compiler optimizations
+  compiler: {
+    // Remove console.logs in production
+    removeConsole: process.env.NODE_ENV === "production",
+  },
+  
+  // Add headers to optimize caching for navigation
   async headers() {
     return [
       {
@@ -20,15 +40,23 @@ const nextConfig: NextConfig = {
             key: 'Cache-Control',
             value: process.env.NODE_ENV === 'development' 
               ? 'no-cache, no-store, must-revalidate, max-age=0' 
-              : 'public, max-age=31536000, immutable'
+              : 'public, max-age=3600, stale-while-revalidate=86400'
           },
           {
-            key: 'Pragma',
-            value: 'no-cache'
+            key: 'X-DNS-Prefetch-Control',
+            value: 'on'
           },
           {
-            key: 'Expires',
-            value: '0'
+            key: 'Strict-Transport-Security',
+            value: 'max-age=63072000; includeSubDomains; preload'
+          },
+          {
+            key: 'X-Content-Type-Options',
+            value: 'nosniff'
+          },
+          {
+            key: 'Referrer-Policy',
+            value: 'strict-origin-when-cross-origin'
           }
         ],
       },
@@ -41,6 +69,16 @@ const nextConfig: NextConfig = {
             value: process.env.NODE_ENV === 'development' 
               ? 'no-cache, no-store, must-revalidate' 
               : 'public, max-age=31536000, immutable'
+          },
+        ],
+      },
+      {
+        // Optimize API routes
+        source: '/api/(.*)',
+        headers: [
+          {
+            key: 'Cache-Control',
+            value: 'public, max-age=300, stale-while-revalidate=3600'
           },
         ],
       },

@@ -68,23 +68,45 @@ export default function OnboardingPage() {
       const { createClientComponentClient } = await import("@/lib/supabase");
       const supabase = createClientComponentClient();
 
-      const { error } = await supabase
+      console.log("🔄 Updating viewer profile with location preference:", {
+        userId: user.id,
+        locationPreference: locationPreference || null,
+        timestamp: new Date().toISOString(),
+      });
+
+      const { data, error } = await supabase
         .from("profiles")
         .update({
-          location_preference: locationPreference,
+          location_preference: locationPreference || null,
           onboarding_completed: true,
         })
-        .eq("id", user.id);
+        .eq("id", user.id)
+        .select()
+        .single();
 
       if (error) {
-        console.error("Error updating profile:", error);
-      } else {
-        console.log("Profile updated successfully, redirecting to dashboard");
-        // Redirect to dashboard
-        router.push("/dashboard");
+        console.error("❌ Error updating viewer profile:", error);
+        alert("Failed to save your preferences. Please try again.");
+        return;
       }
+
+      console.log("✅ Profile updated successfully:", data);
+
+      // Force refresh the auth context to update profile state
+      if (typeof window !== 'undefined') {
+        // Clear any cached auth data to ensure fresh profile fetch
+        localStorage.removeItem('momentmoi_auth_cache');
+        localStorage.removeItem('momentmoi_profile_cache');
+      }
+
+      // Add a small delay before redirecting
+      await new Promise(resolve => setTimeout(resolve, 500));
+
+      console.log("🔄 Redirecting to dashboard...");
+      router.push("/dashboard");
     } catch (error) {
-      console.error("Error during onboarding:", error);
+      console.error("💥 Unexpected error during viewer onboarding:", error);
+      alert("An unexpected error occurred. Please try again.");
     } finally {
       setSubmitting(false);
     }
@@ -98,19 +120,41 @@ export default function OnboardingPage() {
       const { createClientComponentClient } = await import("@/lib/supabase");
       const supabase = createClientComponentClient();
 
-      const { error } = await supabase
+      console.log("🔄 Skipping viewer onboarding:", {
+        userId: user.id,
+        timestamp: new Date().toISOString(),
+      });
+
+      const { data, error } = await supabase
         .from("profiles")
         .update({ onboarding_completed: true })
-        .eq("id", user.id);
+        .eq("id", user.id)
+        .select()
+        .single();
 
       if (error) {
-        console.error("Error updating profile:", error);
-      } else {
-        console.log("Onboarding skipped, redirecting to dashboard");
-        router.push("/dashboard");
+        console.error("❌ Error updating profile on skip:", error);
+        alert("Failed to complete setup. Please try again.");
+        return;
       }
+
+      console.log("✅ Onboarding skipped successfully:", data);
+
+      // Force refresh the auth context to update profile state
+      if (typeof window !== 'undefined') {
+        // Clear any cached auth data to ensure fresh profile fetch
+        localStorage.removeItem('momentmoi_auth_cache');
+        localStorage.removeItem('momentmoi_profile_cache');
+      }
+
+      // Add a small delay before redirecting
+      await new Promise(resolve => setTimeout(resolve, 500));
+
+      console.log("🔄 Redirecting to dashboard...");
+      router.push("/dashboard");
     } catch (error) {
-      console.error("Error during onboarding:", error);
+      console.error("💥 Unexpected error during onboarding skip:", error);
+      alert("An unexpected error occurred. Please try again.");
     } finally {
       setSubmitting(false);
     }

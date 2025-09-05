@@ -1,33 +1,33 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
-import { useAuth } from "@/contexts/AuthContext";
 import { Header } from "@/components/layout/Header";
 import {
   Button,
   Card,
+  CardContent,
+  CardDescription,
   CardHeader,
   CardTitle,
-  CardDescription,
-  CardContent,
   Input,
   Select,
-  SelectTrigger,
-  SelectValue,
   SelectContent,
   SelectItem,
+  SelectTrigger,
+  SelectValue,
 } from "@/components/ui";
+import { useAuth } from "@/contexts/AuthContext";
 import {
   Building2,
-  MapPin,
-  Package,
+  CheckCircle,
   ChevronLeft,
   ChevronRight,
+  MapPin,
+  Package,
   Plus,
   X,
-  CheckCircle,
 } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
 
 type VendorFormData = {
   // Business Information

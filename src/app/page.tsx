@@ -24,6 +24,13 @@ export default function HomePage() {
 
   const eventTypes = ["Weddings", "Christenings", "Parties"];
 
+  // Complete navigation when page mounts
+  useEffect(() => {
+    // Dispatch completion event instead of using the hook function
+    const event = new CustomEvent('navigation:complete');
+    window.dispatchEvent(event);
+  }, []);
+
   useEffect(() => {
     const interval = setInterval(() => {
       setCurrentEventType((prev) => (prev + 1) % eventTypes.length);

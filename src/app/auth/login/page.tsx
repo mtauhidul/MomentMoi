@@ -4,7 +4,7 @@ import { useState, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { useAuth } from "@/contexts/AuthContext";
-import { Header } from "@/components/layout/Header";
+import { Header, Footer } from "@/components/layout";
 import {
   Button,
   Card,

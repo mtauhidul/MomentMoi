@@ -483,14 +483,22 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         timestamp: new Date().toISOString(),
       });
 
-      const { error } = await supabase.auth.signOut();
+      // Clear local state first to prevent UI flickering
+      setUser(null);
+      setSession(null);
+      setProfile(null);
+      setUserType(null);
+
+      // Clear all caches immediately
+      clearAuthCache();
+
+      const { error } = await supabase.auth.signOut({
+        scope: 'global' // Sign out from all sessions
+      });
 
       if (error) {
         throw error;
       }
-
-      // Clear all caches on signout
-      clearAuthCache();
 
       // Log successful signout
       logAuthSuccess(
@@ -511,6 +519,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         userType: currentUserType,
         cacheCleared: true,
       });
+
+      // Force a hard refresh to ensure clean state
+      if (typeof window !== 'undefined') {
+        window.location.href = '/';
+      }
     } catch (error: any) {
       // Enhanced error logging with categorization
       const authError = categorizeAuthError(error, "signout", {
@@ -532,9 +545,21 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         },
       });
 
-      // For signout, we don't throw the error to avoid blocking the UI
-      // but we still log it for debugging
-      console.error("Error during signout (logged):", authError.userMessage);
+      // For signout, we still clear local state even if the API call fails
+      // to prevent users from being stuck in a logged-in state
+      console.error("Error during signout (logged), but clearing local state:", authError.userMessage);
+      
+      // Force clear state and redirect
+      setUser(null);
+      setSession(null);
+      setProfile(null);
+      setUserType(null);
+      clearAuthCache();
+      
+      // Force redirect even on error
+      if (typeof window !== 'undefined') {
+        window.location.href = '/';
+      }
     }
   };
 
@@ -549,7 +574,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       });
 
       const { error } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: `${window.location.origin}/auth/reset-password`,
+        redirectTo: `${window.location.origin}/auth/reset-password/confirm`,
       });
 
       if (error) {

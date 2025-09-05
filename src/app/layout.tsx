@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Lato } from "next/font/google";
 import localFont from "next/font/local";
 import "./globals.css";
@@ -31,8 +31,6 @@ export const metadata: Metadata = {
   description:
     "Sophisticated event planning platform for couples, vendors, and event planners",
   manifest: "/manifest.json",
-  themeColor: "#507c7b",
-  viewport: "width=device-width, initial-scale=1, maximum-scale=1",
   appleWebApp: {
     capable: true,
     statusBarStyle: "default",
@@ -41,6 +39,13 @@ export const metadata: Metadata = {
   formatDetection: {
     telephone: false,
   },
+};
+
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 1,
+  themeColor: "#507c7b",
 };
 
 export default function RootLayout({

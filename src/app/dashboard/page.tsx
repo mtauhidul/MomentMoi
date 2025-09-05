@@ -76,6 +76,15 @@ export default function DashboardPage() {
     }
   }, [user, authLoading, router]);
 
+  // Complete navigation when page is ready
+  useEffect(() => {
+    if (!authLoading && user && profile) {
+      // Dispatch completion event instead of using the hook function
+      const event = new CustomEvent('navigation:complete');
+      window.dispatchEvent(event);
+    }
+  }, [authLoading, user, profile]); // Remove completeNavigation from deps
+
   // Handle onboarding redirection using centralized profile data
   useEffect(() => {
     if (!authLoading && user && profile) {
