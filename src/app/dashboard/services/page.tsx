@@ -155,7 +155,7 @@ export default function ServicesPage() {
 
       // Transform the data to include category name and counts
       const transformedServices =
-        servicesData?.map((service) => ({
+        servicesData?.map((service: any) => ({
           ...service,
           category_name: service.category?.name || "Uncategorized",
           image_count: 0, // TODO: Add actual count from service_images
@@ -167,13 +167,13 @@ export default function ServicesPage() {
       setServices(transformedServices);
 
       // Calculate stats
-      const activeServices = transformedServices.filter((s) => s.is_active);
+      const activeServices = transformedServices.filter((s: any) => s.is_active);
       const totalViews = transformedServices.reduce(
-        (sum, s) => sum + s.view_count,
+        (sum: any, s: any) => sum + s.view_count,
         0
       );
       const totalInquiries = transformedServices.reduce(
-        (sum, s) => sum + s.inquiry_count,
+        (sum: any, s: any) => sum + s.inquiry_count,
         0
       );
 

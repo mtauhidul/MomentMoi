@@ -184,7 +184,7 @@ export default function VendorDiscoveryPage() {
 
       // Filter by location (post-query since it's a nested relation)
       if (filters.location && filters.location !== "all") {
-        filteredVendors = filteredVendors.filter((vendor) =>
+        filteredVendors = filteredVendors.filter((vendor: any) =>
           vendor.vendor_locations.some(
             (location: any) => location.location === filters.location
           )
@@ -195,7 +195,7 @@ export default function VendorDiscoveryPage() {
       // This allows vendors without services to still show up
       if (filters.search && filters.search.trim() !== "") {
         // If searching, only show vendors with matching services or business info
-        filteredVendors = filteredVendors.filter((vendor) => {
+        filteredVendors = filteredVendors.filter((vendor: any) => {
           const searchLower = filters.search.toLowerCase();
           const hasMatchingBusiness =
             vendor.business_name.toLowerCase().includes(searchLower) ||

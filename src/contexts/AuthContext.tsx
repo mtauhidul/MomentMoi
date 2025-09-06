@@ -116,6 +116,28 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState(true);
   const supabase = createClientComponentClient();
 
+  // Early return if supabase client is null (during build)
+  if (!supabase) {
+    return (
+      <AuthContext.Provider
+        value={{
+          user: null,
+          session: null,
+          profile: null,
+          userType: null,
+          loading: false,
+          signIn: async () => ({ error: "Supabase client not available" }),
+          signUp: async () => ({ error: "Supabase client not available" }),
+          signOut: async () => {},
+          resetPassword: async () => ({ error: "Supabase client not available" }),
+          refreshProfile: async () => {},
+        }}
+      >
+        {children}
+      </AuthContext.Provider>
+    );
+  }
+
   // Fetch user profile from database with caching
   const fetchUserProfile = async (
     userId: string,
@@ -258,7 +280,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     // Listen for auth changes
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange(async (event, session) => {
+    } = supabase.auth.onAuthStateChange(async (event: any, session: any) => {
       console.log("🔄 AuthContext - Auth state change:", event);
 
       setSession(session);

@@ -322,7 +322,7 @@ export function useVendorDashboard() {
         if (analyticsError) throw analyticsError;
 
         // Sum up profile views for current month
-        const totalProfileViews = analyticsData?.reduce((sum, record) => sum + (record.profile_views || 0), 0) || 0;
+        const totalProfileViews = analyticsData?.reduce((sum: any, record: any) => sum + (record.profile_views || 0), 0) || 0;
 
         // Get business name from vendor profile
         const { data: vendorProfile, error: profileError } = await supabase
@@ -384,7 +384,7 @@ export function useVendorDashboard() {
 
         if (error) throw error;
 
-        return (inquiries || []).map((inquiry) => ({
+        return (inquiries || []).map((inquiry: any) => ({
           id: inquiry.id,
           clientName: inquiry.client_name || "Anonymous",
           eventType: inquiry.event_type || "Event",
@@ -440,7 +440,7 @@ export function useVendorDashboard() {
 
         if (error) throw error;
 
-        return (bookedInquiries || []).map((inquiry) => ({
+        return (bookedInquiries || []).map((inquiry: any) => ({
           id: inquiry.id,
           clientName: inquiry.client_name || "Anonymous",
           clientEmail: inquiry.client_email || "",
@@ -550,8 +550,8 @@ export function useVendorDashboard() {
 
         if (thisMonthError) throw thisMonthError;
 
-        const lastMonthViews = lastMonthData?.reduce((sum, record) => sum + (record.profile_views || 0), 0) || 0;
-        const thisMonthViews = thisMonthData?.reduce((sum, record) => sum + (record.profile_views || 0), 0) || 0;
+        const lastMonthViews = lastMonthData?.reduce((sum: any, record: any) => sum + (record.profile_views || 0), 0) || 0;
+        const thisMonthViews = thisMonthData?.reduce((sum: any, record: any) => sum + (record.profile_views || 0), 0) || 0;
 
         return lastMonthViews > 0
           ? Math.round(((thisMonthViews - lastMonthViews) / lastMonthViews) * 100)
@@ -613,7 +613,7 @@ export function useVendorDashboard() {
             table: "vendor_inquiries",
             filter: `vendor_id=eq.${vendorId}`,
           },
-          (payload) => {
+          (payload: any) => {
             console.log("Inquiries real-time update:", payload);
             queryClient.invalidateQueries({ queryKey: vendorDashboardKeys.stats(vendorId) });
             queryClient.invalidateQueries({ queryKey: vendorDashboardKeys.inquiries(vendorId) });
@@ -631,7 +631,7 @@ export function useVendorDashboard() {
             table: "vendor_inquiries",
             filter: `vendor_id=eq.${vendorId}`,
           },
-          (payload) => {
+          (payload: any) => {
             console.log("Booked inquiries real-time update:", payload);
             queryClient.invalidateQueries({ queryKey: vendorDashboardKeys.stats(vendorId) });
             queryClient.invalidateQueries({ queryKey: vendorDashboardKeys.events(vendorId) });
@@ -649,7 +649,7 @@ export function useVendorDashboard() {
             table: "vendor_analytics",
             filter: `vendor_id=eq.${vendorId}`,
           },
-          (payload) => {
+          (payload: any) => {
             console.log("Analytics real-time update:", payload);
             queryClient.invalidateQueries({ queryKey: vendorDashboardKeys.stats(vendorId) });
             queryClient.invalidateQueries({ queryKey: vendorDashboardKeys.growth(vendorId) });
@@ -667,7 +667,7 @@ export function useVendorDashboard() {
             table: "vendor_profiles",
             filter: `user_id=eq.${user?.id}`,
           },
-          (payload) => {
+          (payload: any) => {
             console.log("Profile real-time update:", payload);
             queryClient.invalidateQueries({ queryKey: vendorDashboardKeys.profile(user?.id!) });
           }

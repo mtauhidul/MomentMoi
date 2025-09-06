@@ -16,7 +16,7 @@ export async function testRealTimeSubscriptions() {
           schema: "public",
           table: "vendor_inquiries",
         },
-        (payload) => {
+        (payload: any) => {
           console.log("Real-time update received:", payload);
         }
       )
@@ -53,7 +53,7 @@ export async function testVendorSpecificSubscription(vendorId: string) {
           table: "vendor_inquiries",
           filter: `vendor_id=eq.${vendorId}`,
         },
-        (payload) => {
+        (payload: any) => {
           console.log("Vendor-specific real-time update:", payload);
         }
       )

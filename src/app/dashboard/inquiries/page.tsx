@@ -123,7 +123,7 @@ export default function InquiriesPage() {
       }
 
       const transformedInquiries =
-        inquiriesData?.map((inquiry) => ({
+        inquiriesData?.map((inquiry: any) => ({
           ...inquiry,
           service_name: inquiry.service?.name,
         })) || [];
@@ -133,14 +133,14 @@ export default function InquiriesPage() {
       // Calculate stats
       const stats = {
         total: transformedInquiries.length,
-        new: transformedInquiries.filter((i) => i.status === "new").length,
-        responded: transformedInquiries.filter((i) => i.status === "responded")
+        new: transformedInquiries.filter((i: any) => i.status === "new").length,
+        responded: transformedInquiries.filter((i: any) => i.status === "responded")
           .length,
-        booked: transformedInquiries.filter((i) => i.status === "booked")
+        booked: transformedInquiries.filter((i: any) => i.status === "booked")
           .length,
-        declined: transformedInquiries.filter((i) => i.status === "declined")
+        declined: transformedInquiries.filter((i: any) => i.status === "declined")
           .length,
-        archived: transformedInquiries.filter((i) => i.status === "archived")
+        archived: transformedInquiries.filter((i: any) => i.status === "archived")
           .length,
       };
 

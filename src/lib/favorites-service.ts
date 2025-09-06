@@ -149,7 +149,7 @@ export class FavoritesService {
 
       // Filter to only show vendors with active services
       // But also include vendors that have no services at all (for testing/development)
-      const filteredVendors = data?.filter(vendor => {
+      const filteredVendors = data?.filter((vendor: any) => {
         // If vendor has no services, include them (for development/testing)
         if (!vendor.vendor_services || vendor.vendor_services.length === 0) {
           return true;

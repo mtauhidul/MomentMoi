@@ -319,7 +319,7 @@ export function useClientDashboard(): UseClientDashboardReturn {
       .on(
         "postgres_changes",
         { event: "*", schema: "public", table: "events", filter: `planner_id=eq.${user.id}` },
-        (payload) => {
+        (payload: any) => {
           console.log("Events real-time update:", payload);
           queryClient.invalidateQueries({
             queryKey: clientDashboardKeys.planner(user.id),
@@ -329,7 +329,7 @@ export function useClientDashboard(): UseClientDashboardReturn {
       .on(
         "postgres_changes",
         { event: "*", schema: "public", table: "guests" },
-        (payload) => {
+        (payload: any) => {
           console.log("Guests real-time update:", payload);
           queryClient.invalidateQueries({
             queryKey: clientDashboardKeys.planner(user.id),
@@ -339,7 +339,7 @@ export function useClientDashboard(): UseClientDashboardReturn {
       .on(
         "postgres_changes",
         { event: "*", schema: "public", table: "checklist_items" },
-        (payload) => {
+        (payload: any) => {
           console.log("Checklist real-time update:", payload);
           queryClient.invalidateQueries({
             queryKey: clientDashboardKeys.planner(user.id),
@@ -349,7 +349,7 @@ export function useClientDashboard(): UseClientDashboardReturn {
       .on(
         "postgres_changes",
         { event: "*", schema: "public", table: "budget_items" },
-        (payload) => {
+        (payload: any) => {
           console.log("Budget real-time update:", payload);
           queryClient.invalidateQueries({
             queryKey: clientDashboardKeys.planner(user.id),
