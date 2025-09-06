@@ -1,18 +1,19 @@
 // Service Worker for MomentMoi - Refresh Optimization & Offline Support
 
-const CACHE_NAME = "momentmoi-v2"; // Updated cache version
-const STATIC_CACHE = "momentmoi-static-v2";
-const API_CACHE = "momentmoi-api-v2";
+const CACHE_NAME = "momentmoi-v3"; // Updated cache version
+const STATIC_CACHE = "momentmoi-static-v3";
+const API_CACHE = "momentmoi-api-v3";
 
-// Assets to cache immediately
+// Assets to cache immediately - only include assets that definitely exist
 const STATIC_ASSETS = [
   "/",
-  "/dashboard",
   "/manifest.json",
-  "/favicon.ico",
   "/fonts/ivy-presto-display-light.otf",
-  "/globals.css",
-  "/_next/static/css/app/layout.css",
+  "/file.svg",
+  "/globe.svg", 
+  "/next.svg",
+  "/vercel.svg",
+  "/window.svg"
 ];
 
 // API endpoints to cache (for offline fallback)
@@ -27,9 +28,20 @@ self.addEventListener("install", (event) => {
       const cache = await caches.open(STATIC_CACHE);
 
       try {
-        // Cache static assets
-        await cache.addAll(STATIC_ASSETS);
-        console.log("Service Worker: Static assets cached");
+        // Cache static assets individually to avoid complete failure
+        console.log("Service Worker: Caching static assets...");
+        
+        for (const asset of STATIC_ASSETS) {
+          try {
+            await cache.add(asset);
+            console.log(`Service Worker: Cached ${asset}`);
+          } catch (assetError) {
+            console.warn(`Service Worker: Failed to cache ${asset}:`, assetError);
+            // Continue with other assets
+          }
+        }
+        
+        console.log("Service Worker: Static assets caching completed");
       } catch (error) {
         console.error("Service Worker: Failed to cache static assets:", error);
         // Continue without failing the install
