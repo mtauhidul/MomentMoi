@@ -48,19 +48,19 @@ export function Footer() {
             <h3 className="text-text-primary font-semibold">Support</h3>
             <ul className="space-y-2 text-sm">
               <li>
-                <Link href="/help" className="text-text-secondary hover:text-primary-500 transition-colors">
-                  Help Center
+                <Link href="/vendors" className="text-text-secondary hover:text-primary-500 transition-colors">
+                  Find Vendors
                 </Link>
               </li>
               <li>
-                <Link href="/contact" className="text-text-secondary hover:text-primary-500 transition-colors">
-                  Contact Us
+                <Link href="/dashboard" className="text-text-secondary hover:text-primary-500 transition-colors">
+                  Get Started
                 </Link>
               </li>
               <li>
-                <Link href="/privacy" className="text-text-secondary hover:text-primary-500 transition-colors">
-                  Privacy Policy
-                </Link>
+                <span className="text-text-secondary">
+                  Contact: info@momentmoi.com
+                </span>
               </li>
             </ul>
           </div>
@@ -70,14 +70,14 @@ export function Footer() {
             <h3 className="text-text-primary font-semibold">Legal</h3>
             <ul className="space-y-2 text-sm">
               <li>
-                <Link href="/terms" className="text-text-secondary hover:text-primary-500 transition-colors">
+                <span className="text-text-secondary">
                   Terms of Service
-                </Link>
+                </span>
               </li>
               <li>
-                <Link href="/privacy" className="text-text-secondary hover:text-primary-500 transition-colors">
+                <span className="text-text-secondary">
                   Privacy Policy
-                </Link>
+                </span>
               </li>
             </ul>
           </div>

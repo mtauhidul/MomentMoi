@@ -31,6 +31,14 @@ export function useFeaturedVendors(limit: number = 9) {
       setError(null);
 
       const supabase = createClientComponentClient();
+      
+      // Check if Supabase client is available
+      if (!supabase) {
+        console.error("Supabase client not available");
+        setError("Service temporarily unavailable");
+        setVendors([]);
+        return;
+      }
 
       // Fetch verified vendors first, then all vendors, limited to the specified number
       const { data, error } = await supabase
@@ -47,6 +55,7 @@ export function useFeaturedVendors(limit: number = 9) {
     } catch (err) {
       console.error("Error fetching featured vendors:", err);
       setError("Failed to load featured vendors");
+      setVendors([]);
     } finally {
       setLoading(false);
     }
