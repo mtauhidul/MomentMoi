@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
-import { createClientComponentClient, supabase } from "@/lib/supabase";
+import { createClientComponentClient } from "@/lib/supabase";
 
 interface VendorProfile {
   id: string;

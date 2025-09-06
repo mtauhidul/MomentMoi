@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { createClientComponentClient } from "@/lib/supabase";
 import { Header } from "@/components/layout/Header";
@@ -16,7 +16,7 @@ import {
 import { Heart, CheckCircle, AlertCircle } from "lucide-react";
 import Link from "next/link";
 
-export default function ResetPasswordConfirmPage() {
+function ResetPasswordConfirmContent() {
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [loading, setLoading] = useState(false);
@@ -264,5 +264,17 @@ export default function ResetPasswordConfirmPage() {
         </Card>
       </div>
     </div>
+  );
+}
+
+export default function ResetPasswordConfirmPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-primary-600"></div>
+      </div>
+    }>
+      <ResetPasswordConfirmContent />
+    </Suspense>
   );
 }
