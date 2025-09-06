@@ -42,7 +42,7 @@ export function RoutePreloader({ routes, priority = "low" }: RoutePreloaderProps
 export const COMMON_ROUTES = [
   "/dashboard",
   "/dashboard/profile",
-  "/favorites",
+  "/dashboard/vendors/favorites",
 ];
 
 export const VENDOR_ROUTES = [

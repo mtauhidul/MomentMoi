@@ -278,7 +278,7 @@ export function Header() {
                   <Button 
                     variant="outline" 
                     size="sm" 
-                    onClick={() => handleNavigation("/favorites")}
+                    onClick={() => handleNavigation("/dashboard/vendors/favorites")}
                     className="flex items-center space-x-2"
                   >
                     <HeartIcon className="w-4 h-4" />
@@ -300,7 +300,7 @@ export function Header() {
                   <Button 
                     variant="outline" 
                     size="sm" 
-                    onClick={() => handleNavigation("/favorites")}
+                    onClick={() => handleNavigation("/dashboard/vendors/favorites")}
                     className="flex items-center space-x-2"
                   >
                     <HeartIcon className="w-4 h-4" />
@@ -349,7 +349,7 @@ export function Header() {
                         </button>
                         <button
                           onClick={() => {
-                            handleNavigation("/favorites");
+                            handleNavigation("/dashboard/vendors/favorites");
                             setIsUserMenuOpen(false);
                           }}
                           className="flex items-center space-x-2 w-full px-4 py-2 text-sm text-text-primary hover:bg-gray-50 transition-colors"
@@ -494,7 +494,7 @@ export function Header() {
                     <div className="space-y-3 border-t border-border pt-4">
                       <button
                         onClick={() => {
-                          handleNavigation("/favorites");
+                          handleNavigation("/dashboard/vendors/favorites");
                           closeMobileMenu();
                         }}
                         className="flex items-center space-x-2 text-text-secondary hover:text-primary-500 transition-colors py-1 w-full text-left"
