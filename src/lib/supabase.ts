@@ -15,8 +15,15 @@ export const createClientComponentClient = () => {
       // During build/SSR, return a mock client to prevent errors
       console.warn('Supabase environment variables not available during build');
       return null as any;
+    } else {
+      // In browser, show a more helpful error message
+      console.error('Supabase configuration missing. Please check Vercel environment variables:');
+      console.error('- NEXT_PUBLIC_SUPABASE_URL');
+      console.error('- NEXT_PUBLIC_SUPABASE_ANON_KEY');
+      
+      // Return null instead of throwing to prevent app crashes
+      return null as any;
     }
-    throw new Error('@supabase/ssr: Your project\'s URL and API key are required to create a Supabase client!');
   }
 
   if (!_supabaseClient) {
