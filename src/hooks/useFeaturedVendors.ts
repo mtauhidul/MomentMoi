@@ -20,10 +20,24 @@ export function useFeaturedVendors(limit: number = 9) {
   const [vendors, setVendors] = useState<FeaturedVendor[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [retryCount, setRetryCount] = useState(0);
 
   useEffect(() => {
     fetchFeaturedVendors();
   }, [limit]);
+
+  // Retry logic: if vendors are empty and we're not loading, retry after 2 seconds
+  useEffect(() => {
+    if (!loading && vendors.length === 0 && retryCount < 3 && !error) {
+      const timer = setTimeout(() => {
+        console.log(`Retrying featured vendors fetch (attempt ${retryCount + 1})`);
+        setRetryCount(prev => prev + 1);
+        fetchFeaturedVendors();
+      }, 2000);
+      
+      return () => clearTimeout(timer);
+    }
+  }, [loading, vendors.length, retryCount, error]);
 
   const fetchFeaturedVendors = async () => {
     try {
@@ -34,8 +48,8 @@ export function useFeaturedVendors(limit: number = 9) {
       
       // Check if Supabase client is available
       if (!supabase) {
-        console.error("Supabase client not available");
-        setError("Service temporarily unavailable");
+        console.error("Supabase client not available, will retry...");
+        setError(retryCount >= 2 ? "Service temporarily unavailable" : null);
         setVendors([]);
         return;
       }
@@ -52,6 +66,7 @@ export function useFeaturedVendors(limit: number = 9) {
       if (error) throw error;
 
       setVendors(data || []);
+      setRetryCount(0); // Reset retry count on success
     } catch (err) {
       console.error("Error fetching featured vendors:", err);
       setError("Failed to load featured vendors");

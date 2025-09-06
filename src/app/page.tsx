@@ -19,7 +19,7 @@ import { useEffect, useState } from "react";
 export default function HomePage() {
   const [currentEventType, setCurrentEventType] = useState(0);
 
-  const { vendors: featuredVendors, loading: featuredVendorsLoading } =
+  const { vendors: featuredVendors, loading: featuredVendorsLoading, refetch: refetchVendors } =
     useFeaturedVendors(9);
 
   const eventTypes = ["Weddings", "Christenings", "Parties"];
@@ -170,9 +170,16 @@ export default function HomePage() {
             </div>
           ) : (
             <div className="text-center py-12">
-              <p className="text-text-secondary text-lg">
+              <p className="text-text-secondary text-lg mb-4">
                 No featured vendors available at the moment.
               </p>
+              <Button 
+                onClick={refetchVendors}
+                variant="outline"
+                className="mx-auto"
+              >
+                Refresh Vendors
+              </Button>
             </div>
           )}
 

@@ -33,14 +33,14 @@ const nextConfig: NextConfig = {
   async headers() {
     return [
       {
-        // Apply to all routes
+        // Apply to all routes - reduced caching for fresh data
         source: '/(.*)',
         headers: [
           {
             key: 'Cache-Control',
             value: process.env.NODE_ENV === 'development' 
               ? 'no-cache, no-store, must-revalidate, max-age=0' 
-              : 'public, max-age=3600, stale-while-revalidate=86400'
+              : 'public, max-age=300, stale-while-revalidate=1800' // Reduced from 3600 to 300
           },
           {
             key: 'X-DNS-Prefetch-Control',
@@ -73,12 +73,12 @@ const nextConfig: NextConfig = {
         ],
       },
       {
-        // Optimize API routes
+        // Optimize API routes - shorter cache for fresh data
         source: '/api/(.*)',
         headers: [
           {
             key: 'Cache-Control',
-            value: 'public, max-age=300, stale-while-revalidate=3600'
+            value: 'public, max-age=60, stale-while-revalidate=300' // Reduced from 300 to 60
           },
         ],
       },
